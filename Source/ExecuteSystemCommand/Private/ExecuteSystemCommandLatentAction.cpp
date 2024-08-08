@@ -4,6 +4,10 @@
 
 #include "AsyncExecTask.h"
 
+#if PLATFORM_WINDOWS
+#include <process.h>
+#endif
+
 FExecuteSystemCommandLatentAction::FExecuteSystemCommandLatentAction(
     const FLatentActionInfo& InLatentInfo, const FString& Command)
     : ExecutionFunction(InLatentInfo.ExecutionFunction),
@@ -11,7 +15,12 @@ FExecuteSystemCommandLatentAction::FExecuteSystemCommandLatentAction(
       CallbackTarget(InLatentInfo.CallbackTarget) {
 	auto AsyncExecTask =
 	    new FAutoDeleteAsyncTask<FAsyncExecTask>([this, Command]() {
-		    std::system(TCHAR_TO_ANSI(*Command));
+#if PLATFORM_WINDOWS
+		    _wsystem(*Command);
+#else
+		    std::system(TCHAR_TO_UTF8(*Command));
+#endif
+
 		    IsRunning = false;
 	    });
 
